@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Character, Planet, Vehicle, Favorite
+from models import db, User, Character, Planet, Vehicle, Favorite, FavoriteType
 #from models import Person
 
 app = Flask(__name__)
@@ -46,7 +46,7 @@ def get_users():
     serialized_users = [user.serialize() for user in users]
     return jsonify(serialized_users), 200
 
-#agregar ususairo
+#agregar usuario
 @app.route('/users', methods=['POST'])
 def create_user():
     # Obtenemos los datos del cuerpo de la solicitud
@@ -56,6 +56,9 @@ def create_user():
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    is_active = data.get('is_active', True)
 
     if not username or not email or not password:
         return jsonify({"msg": "Faltan campos requeridos"}), 400
@@ -66,7 +69,9 @@ def create_user():
         return jsonify({"msg": "El usuario ya existe"}), 409
 
     # Creamos el nuevo usuario
-    new_user = User(username=username, email=email, password=password)
+    new_user = User(username=username, email=email, password=password,is_active=is_active,
+        first_name=first_name,
+        last_name=last_name, )
     db.session.add(new_user)
     db.session.commit()
 
@@ -129,24 +134,32 @@ def add_planet_favorite(planet_id):
     if not planet:
         return jsonify({"msg": "Planet not found"}), 404
     
-    if CURRENT_USER_ID is None:
-        return jsonify({"msg": "User not authenticated"}), 401
+    if CURRENT_USER_ID is None:  # Verifica si el usuario está autenticado
+        return jsonify({"msg": "User not authenticated"}), 401  # Devuelve error si no está autenticado
 
-    favorite = Favorite(user_id=CURRENT_USER_ID, planet_id=planet_id, favorite_type='planet')
+    favorite = Favorite(user_id=CURRENT_USER_ID, planet_id=planet_id, favorite_type=FavoriteType.planet)
     db.session.add(favorite)
     db.session.commit()
     return jsonify(favorite.serialize()), 201
 
 @app.route('/favorite/people/<int:people_id>', methods=['POST'])
 def add_people_favorite(people_id):
+    if not people_id:
+        return jsonify({"msg": "Invalid people_id"}), 400
+
     character = Character.query.get(people_id)
     if not character:
         return jsonify({"msg": "Character not found"}), 404
     
-    if CURRENT_USER_ID is None:
-        return jsonify({"msg": "User not authenticated"}), 401
+    if CURRENT_USER_ID is None:  # Verifica si el usuario está autenticado
+        return jsonify({"msg": "User not authenticated"}), 401  # Devuelve error si no está autenticado
 
-    favorite = Favorite(user_id=CURRENT_USER_ID, character_id=people_id, favorite_type='character')
+    favorite = Favorite(
+        user_id=CURRENT_USER_ID,
+        character_id=people_id,
+        favorite_type=FavoriteType.character
+    )
+
     db.session.add(favorite)
     db.session.commit()
     return jsonify(favorite.serialize()), 201
@@ -157,10 +170,10 @@ def add_vehicle_favorite(vehicle_id):
     if not vehicle:
         return jsonify({"msg": "Vehicle not found"}), 404
     
-    if CURRENT_USER_ID is None:
-        return jsonify({"msg": "User not authenticated"}), 401
+    if CURRENT_USER_ID is None:  # Verifica si el usuario está autenticado
+        return jsonify({"msg": "User not authenticated"}), 401  # Devuelve error si no está autenticado
 
-    favorite = Favorite(user_id=CURRENT_USER_ID, vehicle_id=vehicle_id, favorite_type='vehicle')
+    favorite = Favorite(user_id=CURRENT_USER_ID, vehicle_id=vehicle_id, favorite_type=FavoriteType.vehicle)
     db.session.add(favorite)
     db.session.commit()
     return jsonify(favorite.serialize()), 201

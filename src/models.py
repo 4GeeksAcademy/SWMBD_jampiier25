@@ -4,7 +4,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 import enum
 
-
 db = SQLAlchemy()
 
 class FavoriteType(enum.Enum):
@@ -19,7 +18,7 @@ class User(db.Model):
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
     first_name: Mapped[str] = mapped_column(String(120))
     last_name: Mapped[str] = mapped_column(String(120))
-    subscription_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.time)
+    subscription_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     favorites = relationship("Favorite", back_populates="user")
 
@@ -31,7 +30,7 @@ class User(db.Model):
             "email": self.email,
             "first_name": self.first_name,
             "last_name": self.last_name,
-            # do not serialize the password, its a security breach
+            #si ponemos password estariamos haciendo leak de la misma
         }
  
 class Character(db.Model):
@@ -103,11 +102,18 @@ class Favorite(db.Model):
     vehicle = relationship("Vehicle", back_populates="favorites")
 
     def serialize(self):
+        # Obtener el nombre según el tipo de favorito
+        name = None
+        if self.favorite_type == FavoriteType.character and self.character:
+            name = self.character.name
+        elif self.favorite_type == FavoriteType.planet and self.planet:
+            name = self.planet.name
+        elif self.favorite_type == FavoriteType.vehicle and self.vehicle:
+            name = self.vehicle.name
+
         return {
             "id": self.id,
             "user_id": self.user_id,
             "favorite_type": self.favorite_type.name,
-            "character_id": self.character_id,
-            "planet_id": self.planet_id,
-            "vehicle_id": self.vehicle_id,
+            "name": name
         }
