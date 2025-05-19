@@ -99,6 +99,48 @@ def get_single_character(id):
         return jsonify({"msg": "Character not found"}), 404
     return jsonify(character.serialize()), 200
 
+# Agregar personaje (POST)
+@app.route('/people', methods=['POST'])
+def create_character():
+    data = request.get_json()
+    name = data.get('name')
+    gender = data.get('gender')
+    birth_year = data.get('birth_year')
+    
+    if not name:
+        return jsonify({"msg": "Name is required"}), 400
+
+    character = Character(name=name, gender=gender, birth_year=birth_year)
+    db.session.add(character)
+    db.session.commit()
+    return jsonify(character.serialize()), 201
+
+# Modificar personaje (PUT)
+@app.route('/people/<int:id>', methods=['PUT'])
+def update_character(id):
+    character = Character.query.get(id)
+    if not character:
+        return jsonify({"msg": "Character not found"}), 404
+
+    data = request.get_json()
+    character.name = data.get('name', character.name)
+    character.gender = data.get('gender', character.gender)
+    character.birth_year = data.get('birth_year', character.birth_year)
+
+    db.session.commit()
+    return jsonify(character.serialize()), 200
+
+# Eliminar personaje (DELETE)
+@app.route('/people/<int:id>', methods=['DELETE'])
+def delete_character(id):
+    character = Character.query.get(id)
+    if not character:
+        return jsonify({"msg": "Character not found"}), 404
+
+    db.session.delete(character)
+    db.session.commit()
+    return jsonify({"msg": "Character deleted"}), 200
+
 #planets
 @app.route('/planets', methods=['GET'])
 def get_planets():
@@ -113,6 +155,48 @@ def get_single_planet(id):
         return jsonify({"msg": "Planet not found"}), 404
     return jsonify(planet.serialize()), 200
 
+# Crear un nuevo planeta (POST)
+@app.route('/planets', methods=['POST'])
+def create_planet():
+    data = request.get_json()
+    name = data.get('name')
+    climate = data.get('climate')
+    terrain = data.get('terrain')
+
+    if not name:
+        return jsonify({"msg": "Name is required"}), 400
+
+    planet = Planet(name=name, climate=climate, terrain=terrain)
+    db.session.add(planet)
+    db.session.commit()
+    return jsonify(planet.serialize()), 201
+
+# Modificar planeta (PUT)
+@app.route('/planets/<int:id>', methods=['PUT'])
+def update_planet(id):
+    planet = Planet.query.get(id)
+    if not planet:
+        return jsonify({"msg": "Planet not found"}), 404
+
+    data = request.get_json()
+    planet.name = data.get('name', planet.name)
+    planet.climate = data.get('climate', planet.climate)
+    planet.terrain = data.get('terrain', planet.terrain)
+
+    db.session.commit()
+    return jsonify(planet.serialize()), 200
+
+# Eliminar planeta (DELETE)
+@app.route('/planets/<int:id>', methods=['DELETE'])
+def delete_planet(id):
+    planet = Planet.query.get(id)
+    if not planet:
+        return jsonify({"msg": "Planet not found"}), 404
+
+    db.session.delete(planet)
+    db.session.commit()
+    return jsonify({"msg": "Planet deleted"}), 200
+
 #vehicles
 @app.route('/vehicles', methods=['GET'])
 def get_vehicles():
@@ -126,6 +210,46 @@ def get_single_vehicle(id):
     if not vehicle:
         return jsonify({"msg": "Vehicle not found"}), 404
     return jsonify(vehicle.serialize()), 200
+
+@app.route('/vehicles', methods=['POST'])
+def create_vehicle():
+    data = request.get_json()
+    name = data.get('name')
+    model = data.get('model')
+
+    if not name:
+        return jsonify({"msg": "Name is required"}), 400
+
+    vehicle = Vehicle(name=name, model=model)
+    db.session.add(vehicle)
+    db.session.commit()
+    return jsonify(vehicle.serialize()), 201
+
+@app.route('/vehicles/<int:id>', methods=['PUT'])
+def update_vehicle(id):
+    vehicle = Vehicle.query.get(id)
+    if not vehicle:
+        return jsonify({"msg": "Vehicle not found"}), 404
+
+    data = request.get_json()
+    vehicle.name = data.get('name', vehicle.name)
+    vehicle.model = data.get('model', vehicle.model)
+
+    db.session.commit()
+    return jsonify(vehicle.serialize()), 200
+
+@app.route('/vehicles/<int:id>', methods=['DELETE'])
+def delete_vehicle(id):
+    vehicle = Vehicle.query.get(id)
+    if not vehicle:
+        return jsonify({"msg": "Vehicle not found"}), 404
+
+    db.session.delete(vehicle)
+    db.session.commit()
+    return jsonify({"msg": "Vehicle deleted"}), 200
+
+
+
 
 #Añadirfavorito
 @app.route('/favorite/planet/<int:planet_id>', methods=['POST'])
